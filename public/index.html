@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GARUDA VISION — Autonomous Vehicle Telemetry & Obstacle Monitoring</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body class="cyber-tactical-theme">
+  <!-- Scanline & Ambient Grid Overlay -->
+  <div class="hud-scanlines" aria-hidden="true"></div>
+  <div class="hud-vignette" aria-hidden="true"></div>
+
+  <!-- Main Container -->
+  <div class="dashboard-root">
+    
+    <!-- ========================================================================= -->
+    <!-- TOP HEADER BAR                                                            -->
+    <!-- ========================================================================= -->
+    <header class="tactical-header">
+      <div class="header-left">
+        <div class="brand-crest">
+          <svg class="garuda-logo-icon" viewBox="0 0 32 32" fill="none">
+            <path d="M16 2L3 9L5 23L16 30L27 23L29 9L16 2Z" stroke="#00e5ff" stroke-width="2" fill="rgba(0, 229, 255, 0.1)"/>
+            <path d="M16 7L8 12V20L16 25L24 20V12L16 7Z" stroke="#00e676" stroke-width="1.5" fill="none"/>
+            <circle cx="16" cy="16" r="3" fill="#00e5ff"/>
+          </svg>
+          <div class="brand-text">
+            <h1 class="brand-title">GARUDA <span class="highlight-cyan">VISION</span></h1>
+            <p class="brand-subtitle">AUTONOMOUS VEHICLE TELEMETRY &amp; OBSTACLE MONITORING</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <!-- Prominent Synthetic Data Disclaimer Badge -->
+        <div class="neon-badge simulated-badge" id="simulated-badge" title="Telemetry data is mathematically synthesized for real-time simulation">
+          <span class="pulse-beacon"></span>
+          <span class="badge-label">SYNTHETIC / SIMULATED DATA</span>
+          <span class="badge-sub">PHYSICAL SENSORS NOT COUPLED</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Live Provider Indicator -->
+        <div class="hud-stat-pill">
+          <span class="stat-tag">SRC</span>
+          <span class="stat-value provider-pill" id="header-provider">SYNTHETIC</span>
+        </div>
+
+        <!-- Vehicle System Status Pill -->
+        <div class="hud-stat-pill status-pill-container">
+          <span class="stat-tag">SYS</span>
+          <span class="stat-value status-pill" id="header-system-status">AUTONOMOUS ENGAGED</span>
+        </div>
+
+        <!-- Tick Counter & Simulation Rate -->
+        <div class="hud-stat-pill">
+          <span class="stat-tag">TICK</span>
+          <span class="stat-value mono-val" id="header-tick">000000</span>
+        </div>
+
+        <div class="hud-stat-pill">
+          <span class="stat-tag">RATE</span>
+          <span class="stat-value mono-val" id="header-fps">20.0 Hz</span>
+        </div>
+
+        <!-- WebSocket Connection & Latency Badge -->
+        <div class="hud-stat-pill ws-status-pill" id="ws-status-badge">
+          <span class="ws-indicator-dot" id="ws-dot"></span>
+          <span class="stat-tag">WS</span>
+          <span class="stat-value" id="ws-status-text">CONNECTING...</span>
+          <span class="ws-latency" id="ws-latency-text">--ms</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========================================================================= -->
+    <!-- MAIN WORKSPACE GRID                                                       -->
+    <!-- ========================================================================= -->
+    <main class="tactical-grid">
+      
+      <!-- ----------------------------------------------------------------------- -->
+      <!-- LEFT PANEL: VEHICLE TELEMETRY & KINEMATICS                              -->
+      <!-- ----------------------------------------------------------------------- -->
+      <aside class="panel col-left" id="panel-telemetry">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="panel-icon">&#9684;</span>
+            <h2 class="panel-title">VEHICLE TELEMETRY &amp; KINEMATICS</h2>
+          </div>
+          <span class="panel-badge" id="ego-vehicle-id">GARUDA-EGO-01</span>
+        </div>
+
+        <div class="panel-body custom-scrollbar">
+          
+          <!-- Speedometer Dial Component -->
+          <div class="telemetry-card speedo-card">
+            <div class="card-caption">VELOCITY DYNAMICS</div>
+            <div class="speedo-container">
+              <svg class="speedo-svg" viewBox="0 0 240 140" id="speedo-gauge">
+                <!-- Background Arc -->
+                <path d="M 30 130 A 90 90 0 0 1 210 130" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12" stroke-linecap="round"/>
+                <!-- Glow Track -->
+                <path d="M 30 130 A 90 90 0 0 1 210 130" fill="none" stroke="rgba(0, 229, 255, 0.15)" stroke-width="14" stroke-linecap="round"/>
+                <!-- Dynamic Progress Arc (Dasharray 283) -->
+                <path id="speedo-arc" d="M 30 130 A 90 90 0 0 1 210 130" fill="none" stroke="url(#speedo-gradient)" stroke-width="12" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="283"/>
+                <!-- Radial Needle -->
+                <line id="speedo-needle" x1="120" y1="130" x2="120" y2="45" stroke="#00e5ff" stroke-width="3" stroke-linecap="round" filter="drop-shadow(0 0 6px #00e5ff)"/>
+                <circle cx="120" cy="130" r="7" fill="#111827" stroke="#00e5ff" stroke-width="3"/>
+                <defs>
+                  <linearGradient id="speedo-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#00e676"/>
+                    <stop offset="60%" stop-color="#00e5ff"/>
+                    <stop offset="85%" stop-color="#ffb300"/>
+                    <stop offset="100%" stop-color="#ff3d00"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              <div class="speedo-readout">
+                <div class="speed-main">
+                  <span class="speed-number" id="telemetry-speed-kph">0.0</span>
+                  <span class="speed-unit">KM/H</span>
+                </div>
+                <div class="speed-secondary">
+                  <span class="mps-val" id="telemetry-speed-mps">0.00</span>
+                  <span class="mps-unit">M/S</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Transmission Gear Matrix -->
+            <div class="gear-selector" id="gear-selector">
+              <span class="gear-pill" data-gear="P">P</span>
+              <span class="gear-pill" data-gear="R">R</span>
+              <span class="gear-pill" data-gear="N">N</span>
+              <span class="gear-pill active" data-gear="D">D</span>
+            </div>
+          </div>
+
+          <!-- Acceleration & Jerk Gauge -->
+          <div class="telemetry-card">
+            <div class="card-caption">LONGITUDINAL ACCELERATION</div>
+            <div class="accel-meter-wrap">
+              <div class="accel-values">
+                <span class="metric-primary" id="telemetry-accel">0.00</span>
+                <span class="metric-unit">m/s&sup2;</span>
+                <span class="metric-divider">|</span>
+                <span class="metric-secondary">JERK: <span id="telemetry-jerk">0.00</span> m/s&sup3;</span>
+              </div>
+              <div class="bipolar-bar-container">
+                <div class="bipolar-center-line"></div>
+                <div class="bipolar-bar" id="accel-bar"></div>
+              </div>
+              <div class="meter-scale">
+                <span>-6.0 BRAKE</span>
+                <span>0.0</span>
+                <span>+4.0 ACCEL</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Steering Angle Visual Meter -->
+          <div class="telemetry-card">
+            <div class="card-caption">STEERING DEFLECTION &amp; YAW RATE</div>
+            <div class="steering-visualizer">
+              <div class="steering-wheel-icon" id="steering-wheel-icon">
+                <svg viewBox="0 0 60 60" width="46" height="46">
+                  <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(0, 229, 255, 0.4)" stroke-width="4"/>
+                  <line x1="30" y1="4" x2="30" y2="20" stroke="#00e5ff" stroke-width="3"/>
+                  <line x1="6" y1="38" x2="22" y2="30" stroke="#00e5ff" stroke-width="3"/>
+                  <line x1="54" y1="38" x2="38" y2="30" stroke="#00e5ff" stroke-width="3"/>
+                  <circle cx="30" cy="30" r="5" fill="#00e5ff"/>
+                </svg>
+              </div>
+              <div class="steering-readout">
+                <div class="val-line">
+                  <span class="label">STEER ANGLE:</span>
+                  <span class="number-val" id="telemetry-steer-deg">0.0&deg;</span>
+                </div>
+                <div class="val-line">
+                  <span class="label">YAW RATE:</span>
+                  <span class="number-val" id="telemetry-yaw-rate">0.0 &deg;/s</span>
+                </div>
+                <!-- Angle Bar Meter -->
+                <div class="steer-bar-wrap">
+                  <div class="steer-center-mark"></div>
+                  <div class="steer-bar" id="steer-bar"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Compass & Orientation Dial -->
+          <div class="telemetry-card compass-card">
+            <div class="card-caption">HEADING &amp; ATTITUDE (ISO 8855)</div>
+            <div class="compass-content">
+              <div class="compass-dial-wrap">
+                <svg class="compass-svg" viewBox="0 0 100 100" id="compass-dial">
+                  <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0, 229, 255, 0.2)" stroke-width="2"/>
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255, 255, 255, 0.05)" stroke-width="1" stroke-dasharray="2 4"/>
+                  <!-- Cardinal Points -->
+                  <text x="50" y="16" text-anchor="middle" class="compass-text-n">N</text>
+                  <text x="88" y="54" text-anchor="middle" class="compass-text">E</text>
+                  <text x="50" y="92" text-anchor="middle" class="compass-text">S</text>
+                  <text x="12" y="54" text-anchor="middle" class="compass-text">W</text>
+                  <!-- Rotating Compass Rose -->
+                  <g id="compass-rose" transform="rotate(0 50 50)">
+                    <polygon points="50,14 44,48 56,48" fill="#ff3d00" opacity="0.9"/>
+                    <polygon points="50,86 44,52 56,52" fill="#00e5ff" opacity="0.6"/>
+                    <circle cx="50" cy="50" r="4" fill="#0a0e17" stroke="#00e5ff" stroke-width="2"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="attitude-angles">
+                <div class="att-item">
+                  <span class="att-label">HEADING</span>
+                  <span class="att-val" id="telemetry-heading">0.0&deg;</span>
+                </div>
+                <div class="att-item">
+                  <span class="att-label">PITCH</span>
+                  <span class="att-val" id="telemetry-pitch">0.0&deg;</span>
+                </div>
+                <div class="att-item">
+                  <span class="att-label">ROLL</span>
+                  <span class="att-val" id="telemetry-roll">0.0&deg;</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Throttle & Brake Demand Pedals -->
+          <div class="telemetry-card">
+            <div class="card-caption">ACTUATOR DEMAND</div>
+            <div class="pedals-grid">
+              <!-- Throttle Bar -->
+              <div class="pedal-col">
+                <div class="pedal-header">
+                  <span>THROTTLE</span>
+                  <span class="pedal-pct" id="throttle-pct-text">0%</span>
+                </div>
+                <div class="pedal-track">
+                  <div class="pedal-fill throttle-fill" id="throttle-fill" style="height: 0%;"></div>
+                </div>
+              </div>
+              <!-- Brake Bar -->
+              <div class="pedal-col">
+                <div class="pedal-header">
+                  <span>BRAKE</span>
+                  <span class="pedal-pct" id="brake-pct-text">0%</span>
+                </div>
+                <div class="pedal-track">
+                  <div class="pedal-fill brake-fill" id="brake-fill" style="height: 0%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Position Coordinates & Odometry -->
+          <div class="telemetry-card">
+            <div class="card-caption">LOCALIZATION &amp; ODOMETRY</div>
+            <div class="coords-matrix">
+              <div class="coord-box">
+                <span class="coord-axis">X (M)</span>
+                <span class="coord-val" id="telemetry-pos-x">0.00</span>
+              </div>
+              <div class="coord-box">
+                <span class="coord-axis">Y (M)</span>
+                <span class="coord-val" id="telemetry-pos-y">0.00</span>
+              </div>
+              <div class="coord-box">
+                <span class="coord-axis">Z (M)</span>
+                <span class="coord-val" id="telemetry-pos-z">0.00</span>
+              </div>
+            </div>
+            <div class="odometry-row">
+              <div class="odo-item">
+                <span class="odo-label">TOTAL DISTANCE:</span>
+                <span class="odo-val" id="telemetry-odo-dist">0.00 km</span>
+              </div>
+              <div class="odo-item">
+                <span class="odo-label">ACTIVE TIME:</span>
+                <span class="odo-val" id="telemetry-odo-time">00:00:00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigation & Planned Path Info -->
+          <div class="telemetry-card nav-card">
+            <div class="card-caption">ROUTE NAVIGATION</div>
+            <div class="nav-segment-name" id="nav-road-segment">Autonomous Corridor Alpha</div>
+            <div class="nav-details-grid">
+              <div>LANE: <span class="nav-strong" id="nav-lane">CENTER</span></div>
+              <div>NEXT TURN: <span class="nav-strong" id="nav-next-turn">120 m</span></div>
+              <div>WAYPOINT: <span class="nav-strong" id="nav-waypoint">0 / 0</span></div>
+              <div>TARGET V: <span class="nav-strong" id="nav-target-speed">50 km/h</span></div>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- ----------------------------------------------------------------------- -->
+      <!-- CENTER: 3D VIEWPORT CONTAINER & TACTICAL HUD                            -->
+      <!-- ----------------------------------------------------------------------- -->
+      <section class="panel col-center" id="panel-viewport">
+        
+        <!-- Center Alert Banner (Prominent Warning Strips) -->
+        <div class="tactical-alert-banner alert-nominal" id="tactical-alert-banner">
+          <div class="alert-pulse-icon" id="alert-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 10h2v5h-2zm0 6h2v2h-2z"/>
+            </svg>
+          </div>
+          <div class="alert-content">
+            <span class="alert-headline" id="alert-headline">COLLISION MONITOR: ALL SECTORS CLEAR</span>
+            <span class="alert-detail" id="alert-detail">Perception field clean &bull; Safe trajectory confirmed</span>
+          </div>
+          <div class="alert-ttc-badge" id="alert-ttc-box" style="display: none;">
+            <span class="ttc-label">TTC</span>
+            <span class="ttc-num" id="alert-ttc-val">--s</span>
+          </div>
+        </div>
+
+        <!-- 3D Canvas Host & Floating HUD Overlays -->
+        <div class="viewport-wrapper">
+          
+          <!-- Three.js Canvas Container -->
+          <div id="viewport-container" class="three-canvas-host"></div>
+
+          <!-- Floating HUD Top Bar: Camera & Sensor Overlays (Flex-spaced, never overlap) -->
+          <div class="viewport-hud-topbar">
+            <!-- Camera Switching -->
+            <div class="floating-hud hud-camera-bar">
+              <span class="hud-bar-title">VIEWPORT CAMERA:</span>
+              <div class="camera-btn-group" id="camera-controls">
+                <button class="hud-btn active" data-camera="chase" title="Third-person chase camera tracking vehicle">CHASE [1]</button>
+                <button class="hud-btn" data-camera="god" title="Top-down tactical god view">GOD VIEW [2]</button>
+                <button class="hud-btn" data-camera="cockpit" title="Driver cockpit perspective">COCKPIT [3]</button>
+                <button class="hud-btn" data-camera="orbit" title="Free orbit 360 inspection">FREE ORBIT [4]</button>
+              </div>
+            </div>
+
+            <!-- Sensor Overlays -->
+            <div class="floating-hud hud-sensor-bar">
+              <span class="hud-bar-title">LAYERS:</span>
+              <div class="layer-toggle-group">
+                <button class="hud-toggle active" id="toggle-lidar" data-layer="lidar" title="Toggle 3D LiDAR point cloud">
+                  <span class="toggle-indicator"></span> LiDAR 32
+                </button>
+                <button class="hud-toggle active" id="toggle-bbox" data-layer="bbox" title="Toggle 3D obstacle bounding boxes">
+                  <span class="toggle-indicator"></span> BBOX
+                </button>
+                <button class="hud-toggle active" id="toggle-grid" data-layer="grid" title="Toggle ground reference grid">
+                  <span class="toggle-indicator"></span> GRID
+                </button>
+                <button class="hud-toggle active" id="toggle-path" data-layer="path" title="Toggle predicted trajectory ribbon">
+                  <span class="toggle-indicator"></span> TRAJECTORY
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reticle / Tactical Crosshair Center Overlay -->
+          <div class="hud-reticle-overlay" aria-hidden="true">
+            <div class="reticle-center"></div>
+            <div class="reticle-ring ring-10m" data-range="10m"></div>
+            <div class="reticle-ring ring-25m" data-range="25m"></div>
+            <div class="reticle-ring ring-50m" data-range="50m"></div>
+          </div>
+
+          <!-- Bottom Telemetry HUD Watermark inside 3D Viewport -->
+          <div class="viewport-hud-bottom">
+            <div class="hud-telemetry-stamp">
+              <span>LAT: <span id="hud-stamp-lat">0.00000&deg;</span></span>
+              <span>LON: <span id="hud-stamp-lon">0.00000&deg;</span></span>
+              <span>LIDAR PTS: <span id="hud-lidar-count">0</span></span>
+            </div>
+            <div class="hud-brand-watermark">GARUDA VISION DIGITAL TWIN v1.0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ----------------------------------------------------------------------- -->
+      <!-- RIGHT PANEL: OBSTACLE INTELLIGENCE & DIAGNOSTICS                        -->
+      <!-- ----------------------------------------------------------------------- -->
+      <aside class="panel col-right" id="panel-obstacles">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="panel-icon">&#9888;</span>
+            <h2 class="panel-title">OBSTACLE INTELLIGENCE &amp; PERCEPTION</h2>
+          </div>
+          <span class="panel-badge badge-warning" id="obstacle-count-badge">0 TARGETS</span>
+        </div>
+
+        <div class="panel-body custom-scrollbar">
+          
+          <!-- Detected Obstacles Card List -->
+          <div class="obstacles-container">
+            <div class="section-subhead">
+              <span>IDENTIFIED TRACKS &amp; VECTORS</span>
+              <button class="btn-quick-spawn" id="btn-quick-spawn" title="Spawn an obstacle directly ahead of vehicle">+ SPAWN AHEAD</button>
+            </div>
+
+            <!-- Scrollable Obstacle List -->
+            <div class="obstacle-list" id="obstacle-list-container">
+              <!-- Dynamically populated cards -->
+              <div class="obstacle-empty-state">
+                <div class="empty-icon">&#10003;</div>
+                <div>NO OBSTACLES IN SCANNING SECTOR</div>
+                <div class="empty-sub">LiDAR and Radar scanning 60m radius</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Diagnostics & Sensor Matrix -->
+          <div class="diagnostics-container">
+            <div class="section-subhead">
+              <span>SYSTEM DIAGNOSTICS &amp; HARDWARE</span>
+              <span class="badge-nominal" id="system-health-badge">OPTIMAL</span>
+            </div>
+
+            <!-- Diagnostics Metrics Grid -->
+            <div class="diag-matrix-grid">
+              
+              <!-- CPU Load -->
+              <div class="diag-card">
+                <div class="diag-label-row">
+                  <span>AUTONOMOUS COMPUTE</span>
+                  <span class="diag-val" id="diag-cpu-val">0.0%</span>
+                </div>
+                <div class="mini-progress-bar">
+                  <div class="progress-fill" id="diag-cpu-bar" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <!-- Battery SoC & Voltage -->
+              <div class="diag-card">
+                <div class="diag-label-row">
+                  <span>TRACTION BATTERY</span>
+                  <span class="diag-val" id="diag-battery-val">0.0%</span>
+                </div>
+                <div class="mini-progress-bar">
+                  <div class="progress-fill battery-fill" id="diag-battery-bar" style="width: 0%;"></div>
+                </div>
+                <div class="diag-sub-row">
+                  <span>PACK VOLTAGE:</span>
+                  <span class="mono-sub" id="diag-battery-volts">0.0 V</span>
+                </div>
+              </div>
+
+              <!-- Motor / Inverter Temperature -->
+              <div class="diag-card">
+                <div class="diag-label-row">
+                  <span>DRIVE INVERTER TEMP</span>
+                  <span class="diag-val" id="diag-temp-val">0.0 &deg;C</span>
+                </div>
+                <div class="mini-progress-bar">
+                  <div class="progress-fill temp-fill" id="diag-temp-bar" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <!-- Compute Pipeline Latency -->
+              <div class="diag-card">
+                <div class="diag-label-row">
+                  <span>PIPELINE LATENCY</span>
+                  <span class="diag-val" id="diag-latency-val">0.0 ms</span>
+                </div>
+                <div class="mini-progress-bar">
+                  <div class="progress-fill latency-fill" id="diag-latency-bar" style="width: 0%;"></div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Subsystems Health Matrix Indicator Tiles -->
+            <div class="subsystems-grid">
+              <div class="subsystem-tile" data-subsystem="perception" id="subsys-perception">
+                <span class="tile-led"></span>
+                <span class="tile-name">PERCEPTION</span>
+                <span class="tile-status">ONLINE</span>
+              </div>
+              <div class="subsystem-tile" data-subsystem="localization" id="subsys-localization">
+                <span class="tile-led"></span>
+                <span class="tile-name">LOCALIZATION</span>
+                <span class="tile-status">ONLINE</span>
+              </div>
+              <div class="subsystem-tile" data-subsystem="planning" id="subsys-planning">
+                <span class="tile-led"></span>
+                <span class="tile-name">PLANNING</span>
+                <span class="tile-status">ONLINE</span>
+              </div>
+              <div class="subsystem-tile" data-subsystem="control" id="subsys-control">
+                <span class="tile-led"></span>
+                <span class="tile-name">ACTUATION</span>
+                <span class="tile-status">ONLINE</span>
+              </div>
+              <div class="subsystem-tile" data-subsystem="lidarSensor" id="subsys-lidar">
+                <span class="tile-led"></span>
+                <span class="tile-name">LiDAR 32CH</span>
+                <span class="tile-status">ONLINE</span>
+              </div>
+              <div class="subsystem-tile" data-subsystem="radarSensor" id="subsys-radar">
+                <span class="tile-led"></span>
+                <span class="tile-name">RADAR ARRAY</span>
+                <span class="tile-status">ONLINE</span>
+              </div>
+              <div class="subsystem-tile" data-subsystem="cameraArray" id="subsys-camera">
+                <span class="tile-led"></span>
+                <span class="tile-name">VISION SENSORS</span>
+                <span class="tile-status">ONLINE</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- ----------------------------------------------------------------------- -->
+      <!-- BOTTOM PANEL: REAL-TIME CHARTS & SIMULATION CONTROLS                    -->
+      <!-- ----------------------------------------------------------------------- -->
+      <footer class="panel col-bottom" id="panel-analytics">
+        
+        <!-- Simulation Control Bar -->
+        <div class="sim-controls-bar">
+          <div class="sim-controls-left">
+            <span class="control-section-title">SIMULATION ENGINE:</span>
+            
+            <button class="sim-btn btn-primary" id="btn-play-pause" title="Play or Pause simulation telemetry">
+              <span class="btn-icon" id="play-pause-icon">&#10074;&#10074;</span>
+              <span id="play-pause-text">PAUSE</span>
+            </button>
+            
+            <button class="sim-btn" id="btn-step" title="Step forward 1 single simulation frame">
+              <span class="btn-icon">&#9654;&#10073;</span>
+              <span>STEP</span>
+            </button>
+            
+            <button class="sim-btn btn-danger" id="btn-reset" title="Reset simulation state and trajectory">
+              <span class="btn-icon">&#8635;</span>
+              <span>RESET</span>
+            </button>
+
+            <button class="sim-btn btn-spawn-hazard" id="btn-spawn-hazard" title="Spawn an emergency obstacle 18 meters directly ahead of the vehicle">
+              <span class="btn-icon">&#9888;</span>
+              <span>SPAWN HAZARD</span>
+            </button>
+          </div>
+
+          <div class="sim-controls-center">
+            <!-- Rate Selector -->
+            <div class="sim-rate-group">
+              <span class="control-label">TICK RATE:</span>
+              <div class="rate-buttons" id="rate-selector">
+                <button class="rate-btn" data-rate="10">10 Hz</button>
+                <button class="rate-btn active" data-rate="20">20 Hz</button>
+                <button class="rate-btn" data-rate="30">30 Hz</button>
+                <button class="rate-btn" data-rate="50">50 Hz</button>
+              </div>
+            </div>
+
+            <!-- Data Provider Switcher -->
+            <div class="sim-provider-group">
+              <span class="control-label">DATA SOURCE:</span>
+              <div class="provider-switch-wrap">
+                <button class="provider-btn active" id="btn-provider-synthetic" data-provider="SYNTHETIC">SYNTHETIC</button>
+                <button class="provider-btn" id="btn-provider-carla" data-provider="CARLA">CARLA BRIDGE</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sim-controls-right">
+            <!-- Sensor Noise Toggle -->
+            <label class="toggle-switch-label" title="Inject realistic Gaussian noise into sensor measurements">
+              <span class="control-label">SENSOR NOISE:</span>
+              <input type="checkbox" id="toggle-noise" class="cyber-switch-input" checked>
+              <span class="cyber-switch-slider"></span>
+              <span class="toggle-status-text" id="noise-status-text">ON</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 4 Real-time Responsive Analytics Charts -->
+        <div class="charts-subgrid">
+          
+          <!-- Chart 1: Speed vs Time -->
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <span class="chart-title">SPEED PROFILE (KM/H)</span>
+              <span class="chart-live-val" id="chart-val-speed">0.0 km/h</span>
+            </div>
+            <div class="canvas-container">
+              <canvas id="chart-speed"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 2: Longitudinal Acceleration -->
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <span class="chart-title">ACCELERATION (M/S&sup2;)</span>
+              <span class="chart-live-val" id="chart-val-accel">0.00 m/s&sup2;</span>
+            </div>
+            <div class="canvas-container">
+              <canvas id="chart-accel"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 3: Steering Angle -->
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <span class="chart-title">STEERING ANGLE (DEG)</span>
+              <span class="chart-live-val" id="chart-val-steer">0.0&deg;</span>
+            </div>
+            <div class="canvas-container">
+              <canvas id="chart-steering"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 4: Obstacle Proximity & TTC -->
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <span class="chart-title">PROXIMITY &amp; TTC DYNAMICS</span>
+              <span class="chart-live-val" id="chart-val-ttc">CLEAR</span>
+            </div>
+            <div class="canvas-container">
+              <canvas id="chart-proximity"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+      </footer>
+
+    </main>
+
+  </div>
+
+  <!-- Scripts: Vendor Libraries via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Frontend Architecture Modules -->
+  <script src="js/charts.js"></script>
+  <script src="js/telemetry-ui.js"></script>
+  <script src="js/visualization.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
